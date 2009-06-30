@@ -1,0 +1,66 @@
+#!/bin/sh
+#
+# dump_db: dump specified MySQL database (or specified tables) to disk for backup purposes.
+#
+# When       Who                What
+# 2009-09-19 fredrik@xpd.se     created.
+
+PATH=/bin:/usr/bin
+
+PROG=$(basename $0)
+MYSQLDUMP=/usr/bin/mysqldump
+MYSQLDUMP_ARG="--opt"
+BACKUP_DIR=/var/backup
+USAGE="Usage: $PROG [db_name [tbl_name ...]]"
+TODAY=$(date '+%Y%m%d')
+LOG_FACILITY="local7"
+
+#
+# start of functions
+#
+
+info() # msg
+{
+        MSG="INFO: $1"
+        logger -t $PROG -p $LOG_FACILITY.warn "$MSG"
+        echo "$MSG"
+}
+
+fatal() # msg
+{
+        MSG="FATAL: $1 (bailing out)"
+        logger -t $PROG -p $LOG_FACILITY.error "$MSG"
+        echo "$MSG"
+        exit 255
+}
+
+#
+# end of functions - start of main
+#
+
+umask 077
+
+SPEC=$1
+if [ "${2:-!XyZZy!}" != "!XyZZy!" ]; then
+	SPEC=$SPEC.$2
+fi
+
+BACKUP_FILE=$BACKUP_DIR/${SPEC}.${TODAY}.sql
+if [ -f $BACKUP_FILE ]; then
+	fatal "\"$BACKUP_FILE\" exists."
+else
+	$MYSQLDUMP $MYSQLDUMP_ARG $* >$BACKUP_FILE
+	case $? in
+		0)
+			info "dumped MySQL database to \"$BACKUP_FILE\""
+			break;;
+		6)
+			fatal "no such table, args was \"$*\"";;
+		2)
+			fatal "no such database, arg/s was \"$*\"";;
+		*)
+			fatal "unknown error, arg/s was \"$*\"";;
+	esac
+fi
+
+exit 0

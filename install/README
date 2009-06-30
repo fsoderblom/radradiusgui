@@ -1,0 +1,102 @@
+    _            __        ____      __  _
+   (_)___  _____/ /_____ _/ / /___ _/ /_(_)___  ____
+  / / __ \/ ___/ __/ __ `/ / / __ `/ __/ / __ \/ __ \
+ / / / / (__  ) /_/ /_/ / / / /_/ / /_/ / /_/ / / / /
+/_/_/ /_/____/\__/\__,_/_/_/\__,_/\__/_/\____/_/ /_/
+
+
+1. Create neccesary tables using the supplied SQL scripts.
+
+  # mysql <rrg.sql
+  # mysql <freeradius.sql
+
+2. Update the include-dbcon.inc.php file in the _include directory with servername, username
+   password and database name for both the GUI and FreeRADIUS.
+
+  # vi /path/to/htdocs/_includes/include-dbcon.inc.php
+  .
+  .
+  .
+  // Configuration for FreeRADIUS GUI DB //
+   connect_to_mysql(
+     $TEMP['server']           = '<host>',            /* The MySQL server. It can also include a port number. */
+     $TEMP['username']         = '<radius-gui-user>', /* The username. */
+     $TEMP['password']         = '<password>',        /* The password. */
+     $TEMP['database_name']    = '<db>',              /* The name of the database that is to be selected. */
+     $TEMP['link_identifier']  = 'gui',               /* The MySQL connection. It is also used for naming error messages. */
+
+  // Configuration for FreeRADIUS RADIUS DB //
+   connect_to_mysql(
+     $TEMP['server']           = '<host>',            /* The MySQL server. It can also include a port number. */
+     $TEMP['username']         = '<freeradius-user>', /* The username. */
+     $TEMP['password']         = '<password>',        /* The password. */
+     $TEMP['database_name']    = '<db>',              /* The name of the database that is to be selected. */
+     $TEMP['link_identifier']  = 'radius',            /* The MySQL connection. It is also used for naming error messages. */
+
+3. Create the MySQL GUI user and give it appropriate privileges on the RRG tables.
+
+  # mysql rrg
+  mysql> GRANT ALL ON rrg.* TO '<radius-gui-user>'@'localhost' IDENTIFIED BY 'password';
+
+4. Create the MySQL Freeradius user and give it appropriate privileges on the FreeRADIUS tables.
+
+  # mysql radius
+  mysql> GRANT ALL ON radius.* TO '<freeradius-user>'@'localhost' IDENTIFIED BY 'password';
+
+5. Create a user for the "radping" utility, it should only have INSERT capability
+   on the specific table (rrg.freeradius_serverhealth).
+
+  # mysql rrg
+  mysql> GRANT INSERT ON rrg.freeradius_serverhealth TO '<radping-user>'@'localhost' IDENTIFIED BY 'password';
+
+6. Create a user to run the "radping" binary.
+
+  # groupadd radping
+  # useradd -m -c "RADIUS ping" -g radping radping
+
+7. Copy the binaries from the bin directory to /opt/radtools/bin and
+   set correct owner and permissions.
+
+  # mkdir -p /opt/radtools/bin
+  # cp /path/to/repo/bin/* /opt/radtools/bin
+
+  # chmod 555 /opt/radtools /opt/radtools/bin
+  # chown -R root:root /opt/radtools
+  # chmod 500 /opt/radtools/bin/*
+  # chgrp radping /opt/radtools/bin/radping
+  # chmod 550 /opt/radtools/bin/radping
+
+8. Update /opt/radtools/bin/radping and a correct IP address and shared secret
+   for your RADIUS server. 
+
+  RADIUS_SERVER="ip.add.re.ss"
+  SHARED_SECRET="shared-secret"
+
+  And update the MySQL connection information according to the previously executed GRANT statement
+  for the radping user.
+
+  MYSQL_HOST="<host>"
+  MYSQL_DB="<db>"
+  MYSQL_USER="<radping-user>"
+  MYSQL_PW="<password>"
+
+9. Add crontab entries for radping.
+
+  # crontab -u radping <crontab.radping
+
+10. Add crontab entries for root.
+
+  # crontab <crontab.root
+
+11. Place _setup.php in your document root.
+
+  # cp _setup.php /var/www/htdocs
+
+12. Point your favourite browser at it, e.g. https://your.server.cc/_setup.php
+
+13. IMPORTANT: Remove _setup.php from your document root.
+
+  # rm /var/www/htdocs/_setup.php
+
+14. Point your favourite browser to https://your.server.cc/ and login with
+    the previously choosen user and password.

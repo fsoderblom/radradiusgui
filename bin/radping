@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# radping: simple RADIUS server health check.
+#
+# When       Who                What
+# 2008-09-19 fredrik@xpd.se     created.
+
+PROG=$(basename $0)
+PATH=/usr/bin:/bin
+
+RADIUS_SERVER="ip.add.re.ss"
+SERVER_STATUS="12"
+SHARED_SECRET="shared-secret"
+
+MYSQL="/usr/bin/mysql"
+MYSQL_HOST="<host>"
+MYSQL_DB="<db>"
+MYSQL_USER="<user>"
+MYSQL_PW="<password>"
+MYSQL_ARGS="-B --user=$MYSQL_USER --password=$MYSQL_PW"
+
+#
+# start of functions
+#
+
+mySQLquery() # expression
+{
+	RESULT=$($MYSQL $MYSQL_ARGS -s -e "$1" $MYSQL_DB)
+	if [ "$RESULT" = "NULL" ]; then
+		echo 0
+	else
+		echo $RESULT
+	fi
+}
+
+
+#
+# end of functions
+#
+
+RESPONSE=$(echo "User-Name = Status" | radclient $RADIUS_SERVER $SERVER_STATUS $SHARED_SECRET | tail -1)
+if [ $(echo $RESPONSE | grep -c "FreeRADIUS up ") -gt 0 ]; then
+	MSG=$(echo $RESPONSE | sed -e 's/^.*Reply-Message = "//' -e 's/"$//')
+else
+	MSG="Server is not responding"
+fi
+CODE=$(mySQLquery "INSERT INTO freeradius_serverhealth (date, message) VALUES (NOW(), '$MSG')")
+echo $MSG
+exit

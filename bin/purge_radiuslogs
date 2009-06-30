@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+# purge_radiuslogs: trim down size of MySQL table to specified number of days.
+#
+# When       Who                What
+# 2008-09-19 fredrik@xpd.se     created.
+
+PATH=/bin:/usr/bin
+
+PROG=$(basename $0)
+MYSQL=/usr/bin/mysql
+LOG_FACILITY="local7"
+
+KEEP_DAYS=180
+
+#
+# start of functions
+#
+
+info() # msg
+{
+        MSG="INFO: $1"
+        logger -t $PROG -p $LOG_FACILITY.warn "$MSG"
+        echo "$MSG"
+}
+
+fatal() # msg
+{
+        MSG="FATAL: $1 (bailing out)"
+        logger -t $PROG -p $LOG_FACILITY.error "$MSG"
+        echo "$MSG"
+        exit 255
+}
+
+trimLog() # db table datefield
+{
+	MYSQL_DB=${1:-none_specified}
+	MYSQL_TABLE=${2:-none_specified}
+	DATE_FIELD=${3:-none_specified}
+
+	# Initial row count
+	ROWS_PRE=$($MYSQL $MYSQL_DB --batch -se "SELECT COUNT(*) FROM $MYSQL_TABLE;")
+
+	# purge old entries from table (older than $KEEP_DAYS)
+	START_SEC=$(date '+%s')
+	$MYSQL $MYSQL_DB --batch -se "DELETE FROM $MYSQL_TABLE WHERE $DATE_FIELD < DATE_SUB(CURRENT_DATE(), INTERVAL ${KEEP_DAYS:-45} DAY);"
+	STOP_SEC=$(date '+%s')
+
+	# Optimize table
+	$MYSQL $MYSQL_DB --batch -se "OPTIMIZE TABLE $MYSQL_TABLE"
+
+	# Ending row count
+	ROWS_POST=$($MYSQL $MYSQL_DB --batch -se "SELECT COUNT(*) FROM $MYSQL_TABLE;")
+
+	# Calculate and report
+	WALL_TIME=$(expr ${START_SEC:-0} - ${STOP_SEC:-0})
+	PURGED_ROWS=$(expr ${ROWS_PRE:-0} - ${ROWS_POST:-0})
+	if [ $PURGED_ROWS -lt 0 ]; then
+		PURGED_ROWS=0
+	fi
+
+	info "$MYSQL_DB.$MYSQL_TABLE: purged $PURGED_ROWS row/s from a total of $ROWS_PRE row/s (keeping $KEEP_DAYS day/s), deletion took $WALL_TIME second/s."
+}
+
+#
+# end of functions - start of main
+#
+
+trimLog freeradius freeradius_serverhealth date
+trimLog freeradius freeradius_gui_logdb datetime
+
+exit 0

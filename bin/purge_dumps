@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# purge_dumps: remove old dumped MySQL databases.
+#
+# When       Who                What
+# 2008-09-19 fredrik@xpd.se     created.
+
+PATH=/bin:/usr/bin
+
+PROG=$(basename $0)
+SAVE_DAYS=30
+BACKUP_DIR=/var/backup
+LOG_FACILITY="local7"
+
+#
+# start of functions
+#
+
+info() # msg
+{
+	MSG="INFO: $1"
+	logger -t $PROG -p $LOG_FACILITY.warn "$MSG"
+	echo "$MSG"
+}
+
+fatal() # msg
+{
+	MSG="FATAL: $1 (bailing out)"
+	logger -t $PROG -p $LOG_FACILITY.error "$MSG"
+	echo "$MSG"
+	exit 255
+}
+
+#
+# end of functions - start of main
+#
+
+find ${BACKUP_DIR:-/var/backup} -mtime +${SAVE_DAYS:-30} -name '*.sql' -exec rm {} \;
+info "removed dumped databases from ${BACKUP_DIR:-/var/backup} older than ${SAVE_DAYS:-30} day/s."
+
+exit 0
