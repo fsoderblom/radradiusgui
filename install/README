@@ -33,28 +33,40 @@
      $TEMP['database_name']    = '<db>',              /* The name of the database that is to be selected. */
      $TEMP['link_identifier']  = 'radius',            /* The MySQL connection. It is also used for naming error messages. */
 
-3. Create the MySQL GUI user and give it appropriate privileges on the RRG tables.
+3. Create the MySQL RRG GUI user and give it appropriate privileges on the RRG tables. 
+   This user need full privileges to be able to manipulate all of RRG:s tables.
 
   # mysql rrg
   mysql> GRANT ALL ON rrg.* TO '<radius-gui-user>'@'localhost' IDENTIFIED BY 'password';
+  mysql> FLUSH PRIVILEGES;
 
-4. Create the MySQL Freeradius user and give it appropriate privileges on the FreeRADIUS tables.
+4. Create the MySQL RRG FreeRADIUS user and give it appropriate privileges on the FreeRADIUS tables.
+   This user needs limited privileges to be able to update some of FreeRADIUS:s "internal" tables.
 
   # mysql radius
-  mysql> GRANT ALL ON radius.* TO '<freeradius-user>'@'localhost' IDENTIFIED BY 'password';
+  mysql> GRANT SELECT,INSERT,DELETE,UPDATE ON radius.* TO '<rrg-freeradius-user>'@'localhost' IDENTIFIED BY 'password';
+  mysql> FLUSH PRIVILEGES;
 
-5. Create a user for the "radping" utility, it should only have INSERT capability
+5. Create the FreeRADIUS MySQL user and give it appropriate privileges on the FreeRADIUS tables.
+   This user need full privileges to be able to manipulate all of FreeRADIUS:s tables, this user
+   will also be specified in the sql.conf file of the FreeRADIUS installation.
+
+  mysql> GRANT ALL on radius.* TO '<freeradius-user>'@'localhost' IDENTIFIED BY 'password';
+  mysql> FLUSH PRIVILEGES;
+
+6. Create a user for the "radping" utility, it should only have INSERT capability
    on the specific table (rrg.freeradius_serverhealth).
 
   # mysql rrg
   mysql> GRANT INSERT ON rrg.freeradius_serverhealth TO '<radping-user>'@'localhost' IDENTIFIED BY 'password';
+  mysql> FLUSH PRIVILEGES;
 
-6. Create a user to run the "radping" binary.
+7. Create a user to run the "radping" binary.
 
   # groupadd radping
   # useradd -m -c "RADIUS ping" -g radping radping
 
-7. Copy the binaries from the bin directory to /opt/radtools/bin and
+8. Copy the binaries from the bin directory to /opt/radtools/bin and
    set correct owner and permissions.
 
   # mkdir -p /opt/radtools/bin
@@ -66,7 +78,7 @@
   # chgrp radping /opt/radtools/bin/radping
   # chmod 550 /opt/radtools/bin/radping
 
-8. Update /opt/radtools/bin/radping and a correct IP address and shared secret
+9. Update /opt/radtools/bin/radping and a correct IP address and shared secret
    for your RADIUS server. 
 
   RADIUS_SERVER="ip.add.re.ss"
@@ -80,23 +92,23 @@
   MYSQL_USER="<radping-user>"
   MYSQL_PW="<password>"
 
-9. Add crontab entries for radping.
+10. Add crontab entries for radping.
 
   # crontab -u radping <crontab.radping
 
-10. Add crontab entries for root.
+11. Add crontab entries for root.
 
   # crontab <crontab.root
 
-11. Place _setup.php in your document root.
+12. Place _setup.php in your document root.
 
   # cp _setup.php /var/www/htdocs
 
-12. Point your favourite browser at it, e.g. https://your.server.cc/_setup.php
+13. Point your favourite browser at it, e.g. https://your.server.cc/_setup.php
 
-13. IMPORTANT: Remove _setup.php from your document root.
+14. IMPORTANT: Remove _setup.php from your document root.
 
   # rm /var/www/htdocs/_setup.php
 
-14. Point your favourite browser to https://your.server.cc/ and login with
+15. Point your favourite browser to https://your.server.cc/ and login with
     the previously choosen user and password.
