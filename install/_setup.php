@@ -8,7 +8,7 @@
   
   if (!empty($_POST['password'])) {
     $TEMP[000] = "
-                  INSERT INTO `freeradius`.`freeradius_gui_userdb` (
+                  INSERT INTO `rrg`.`freeradius_gui_userdb` (
                     `ID`,
                     `MODIFIED`,
                     `firstname`,
