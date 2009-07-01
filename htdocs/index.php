@@ -1361,6 +1361,7 @@
       function resetInactivityTimer() {
         clearTimeout(inactivityTimer);
         inactivityTimer=setTimeout(inactivityAlert,7*60*1000) /* Give a warning after 7 minutes (3 minutes to go) */
+        <?php $_SESSION['check_inactivity'] = time(); /* Reset session variable */ ?>
       }
 <?php
 
