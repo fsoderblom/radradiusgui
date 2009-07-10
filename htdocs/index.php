@@ -1131,13 +1131,24 @@
 
      // Store into database //
       if (count($_SESSION["messages"]["failure"]) == 0) { ## Proceed if input passed validation ##
+       // Check mySQL version //
+        preg_match('/[1-9]\.(?:[0-9]\.?)*/', mysql_get_server_info(), $TEMP['mysql_get_server_info']);
+        if ($TEMP['mysql_get_server_info'][0] >= 4.1) {
+          $TEMP['mysql_get_server_info']['gtoet4.1'] = TRUE;
+        } else {
+          $TEMP['mysql_get_server_info']['gtoet4.1'] = FALSE;
+        }
        // Overwrite existing duplicates? //
         foreach ($_SESSION["macdb"]["form"]["mac48"] AS $TEMP[002] => $TEMP[003]) {
-          if ($_SESSION["macdb"]["form"]["overwrite"] == "1") {
+          $INSERTorREPLACE = "INSERT";
+          if (($_SESSION["macdb"]["form"]["overwrite"] == "1") && ($TEMP['mysql_get_server_info']['gtoet4.1'] == TRUE)) {
             $OVERWRITE = "ON DUPLICATE KEY UPDATE `vlandb_vlanid` = '".$_SESSION["macdb"]["form"]["vlanid"][$TEMP[002]]."'";
+          } elseif (($_SESSION["macdb"]["form"]["overwrite"] == "1") && ($TEMP['mysql_get_server_info']['gtoet4.1'] == FALSE)) {
+            $INSERTorREPLACE = "REPLACE";
+            $OVERWRITE = "";
           }
           $TEMP[000] = "
-                        INSERT INTO `freeradius`.`freeradius_gui_macdb` (
+                        ".$INSERTorREPLACE." INTO `freeradius`.`freeradius_gui_macdb` (
                           `ID`,
                           `MODIFIED`,
                           `mac48`,
@@ -1154,7 +1165,9 @@
                       ;";
           $TEMP[001] = mysql_query($TEMP[000], $DB['link_identifier']['gui']);
           if ($TEMP[001]) {
+            manage_usergroup('DELETE',  $_SESSION["macdb"]["form"]["mac48"][$TEMP[002]], NULL);
             manage_usergroup('INSERT', $_SESSION["macdb"]["form"]["mac48"][$TEMP[002]], $_SESSION["macdb"]["form"]["vlanid"][$TEMP[002]]);
+            manage_radcheck('DELETE', $_SESSION["macdb"]["form"]["mac48"][$TEMP[002]], NULL);
             manage_radcheck('INSERT', $_SESSION["macdb"]["form"]["mac48"][$TEMP[002]], "");
             write_to_log("NOTICE", "MACDB", "MAC-address (".$_SESSION["macdb"]["form"]["mac48"][$TEMP[002]].") was imported successfully.");
             $_SESSION["messages"]["success"][] = "MAC-adress <span class=\"color_blue\">".$_SESSION["macdb"]["form"]["mac48"][$TEMP[002]]."/".$_SESSION["macdb"]["form"]["vlanid"][$TEMP[002]]."</span> sparad.";
@@ -1296,7 +1309,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta http-equiv="Expires" content="0" />
     <meta http-equiv="pragma" content="no-cache" />
-    <title>Rad Radius GUI (RRG) 1.1.2</title>
+    <title>Rad Radius GUI (RRG) 1.1.8</title>
     <script type="text/javascript">
       var xmlHttp;
 
