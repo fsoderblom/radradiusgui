@@ -82,6 +82,7 @@ CREATE TABLE freeradius_gui_vlandb (
 CREATE TABLE freeradius_serverhealth (
   id int(10) NOT NULL auto_increment,
   date datetime NOT NULL default '0000-00-00 00:00:00',
+  host varchar(128) NOT NULL default '',
   message varchar(128) NOT NULL default '',
   PRIMARY KEY  (id)
 ) TYPE=MyISAM COMMENT='Server health checks are stored here from the radping utilit';

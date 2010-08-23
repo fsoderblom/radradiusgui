@@ -38,12 +38,12 @@ mySQLquery() # expression
 # end of functions
 #
 
-RESPONSE=$(echo "User-Name = Status" | radclient $RADIUS_SERVER $SERVER_STATUS $SHARED_SECRET | tail -1)
+RESPONSE=$(echo "Message-Authenticator = None,User-Name = Status" | radclient $RADIUS_SERVER $SERVER_STATUS $SHARED_SECRET | tail -1)
 if [ $(echo $RESPONSE | grep -c "FreeRADIUS up ") -gt 0 ]; then
 	MSG=$(echo $RESPONSE | sed -e 's/^.*Reply-Message = "//' -e 's/"$//')
 else
 	MSG="Server is not responding"
 fi
-CODE=$(mySQLquery "INSERT INTO freeradius_serverhealth (date, message) VALUES (NOW(), '$MSG')")
+CODE=$(mySQLquery "INSERT INTO freeradius_serverhealth (date, host, message) VALUES (NOW(), '$RADIUS_SERVER', '$MSG')")
 echo $MSG
 exit
