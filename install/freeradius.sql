@@ -134,10 +134,10 @@ CREATE TABLE radippool (
 
 CREATE TABLE radpostauth (
   id int(11) NOT NULL auto_increment,
-  user varchar(64) NOT NULL default '',
+  username varchar(64) NOT NULL default '',
   pass varchar(64) NOT NULL default '',
   reply varchar(32) NOT NULL default '',
-  date timestamp(14) NOT NULL,
+  authdate timestamp(14) NOT NULL,
   PRIMARY KEY  (id)
 ) TYPE=MyISAM;
 
@@ -156,10 +156,10 @@ CREATE TABLE radreply (
 ) TYPE=MyISAM;
 
 --
--- Table structure for table `usergroup`
+-- Table structure for table `radusergroup`
 --
 
-CREATE TABLE usergroup (
+CREATE TABLE radusergroup (
   UserName varchar(64) NOT NULL default '',
   GroupName varchar(64) NOT NULL default '',
   priority int(11) NOT NULL default '1',

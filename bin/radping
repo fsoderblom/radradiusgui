@@ -1,7 +1,5 @@
 #!/bin/sh
 #
-# radping: simple RADIUS server health check.
-#
 # When       Who                What
 # 2008-09-19 fredrik@xpd.se     created.
 
@@ -9,7 +7,7 @@ PROG=$(basename $0)
 PATH=/usr/bin:/bin
 
 RADIUS_SERVER="ip.add.re.ss"
-SERVER_STATUS="12"
+SERVER_STATUS="status"
 SHARED_SECRET="shared-secret"
 
 MYSQL="/usr/bin/mysql"
@@ -38,9 +36,12 @@ mySQLquery() # expression
 # end of functions
 #
 
-RESPONSE=$(echo "Message-Authenticator = None,User-Name = Status" | radclient $RADIUS_SERVER $SERVER_STATUS $SHARED_SECRET | tail -1)
-if [ $(echo $RESPONSE | grep -c "FreeRADIUS up ") -gt 0 ]; then
-	MSG=$(echo $RESPONSE | sed -e 's/^.*Reply-Message = "//' -e 's/"$//')
+#Received response ID 65, code 2, length = 20
+#radclient: no response from server for ID 214 socket 3
+
+RESPONSE=$(echo "Message-Authenticator = 0x00, FreeRADIUS-Statistics-Type = 1" | radclient -d /etc/raddb $RADIUS_SERVER $SERVER_STATUS $SHARED_SECRET | tail -1)
+if [ $(echo $RESPONSE | grep -c "Received response ID ") -gt 0 ]; then
+	MSG="Server is up"
 else
 	MSG="Server is not responding"
 fi
