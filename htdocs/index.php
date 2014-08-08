@@ -335,7 +335,7 @@
                                         "%s",
                                         "Auth-Type",
                                         ":=",
-                                        "None"
+                                        "Accept"
                                       );',
                                         sanitize($INPUT002)
                                       );
@@ -362,7 +362,7 @@
    // Insert into RADIUS database //
     if ($INPUT001 == 'INSERT') {
       $TEMP['insert'][000] = sprintf('
-                                      INSERT INTO `radius`.`usergroup` (
+                                      INSERT INTO `radius`.`radusergroup` (
                                         `UserName`,
                                         `GroupName`,
                                         `priority`
@@ -381,10 +381,10 @@
    // Update RADIUS database //
     if ($INPUT001 == 'UPDATE') {
       $TEMP['update'][000] = sprintf('
-                                      UPDATE `radius`.`usergroup` SET
-                                        `usergroup`.`GroupName` = %d
+                                      UPDATE `radius`.`radusergroup` SET
+                                        `radusergroup`.`GroupName` = %d
                                       WHERE
-                                        `usergroup`.`UserName` = "%s"
+                                        `radusergroup`.`UserName` = "%s"
                                       LIMIT 1
                                       ',
                                         (int) sanitize($INPUT003),
@@ -396,8 +396,8 @@
    // Delete from RADIUS database //
     if ($INPUT001 == 'DELETE') {
       $TEMP['delete'][000] = sprintf('
-                                      DELETE FROM `radius`.`usergroup` WHERE
-                                        `usergroup`.`UserName` = "%s"
+                                      DELETE FROM `radius`.`radusergroup` WHERE
+                                        `radusergroup`.`UserName` = "%s"
                                       LIMIT 1
                                       ',
                                         sanitize($INPUT002)
